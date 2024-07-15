@@ -14,6 +14,7 @@ const kindOf = (cache => thing => {
   return cache[str] || (cache[str] = str.slice(8, -1).toLowerCase());
 })(Object.create(null));
 
+// 根据传入的类型返回用于判断输入的参数是否为指定类型的函数
 const kindOfTest = (type) => {
   type = type.toLowerCase();
   return (thing) => kindOf(thing) === type
@@ -212,6 +213,7 @@ const isFormData = (thing) => {
  */
 const isURLSearchParams = kindOfTest('URLSearchParams');
 
+// 定义分别用于判断某个值是否为ReadableStream、Request、Response、Headers的函数(Fetch API)
 const [isReadableStream, isRequest, isResponse, isHeaders] = ['ReadableStream', 'Request', 'Response', 'Headers'].map(kindOfTest);
 
 /**
