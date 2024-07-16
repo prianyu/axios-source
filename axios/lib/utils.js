@@ -33,7 +33,7 @@ const { isArray } = Array;
 
 /**
  * Determine if a value is undefined
- *
+ * 是否为undefined
  * @param {*} val The value to test
  *
  * @returns {boolean} True if the value is undefined, otherwise false
@@ -42,7 +42,7 @@ const isUndefined = typeOfTest('undefined');
 
 /**
  * Determine if a value is a Buffer
- *
+ * 检测Buffer类型
  * @param {*} val The value to test
  *
  * @returns {boolean} True if value is a Buffer, otherwise false
@@ -54,7 +54,7 @@ function isBuffer(val) {
 
 /**
  * Determine if a value is an ArrayBuffer
- *
+ * 检测ArrayBuffer类型
  * @param {*} val The value to test
  *
  * @returns {boolean} True if value is an ArrayBuffer, otherwise false
@@ -81,7 +81,7 @@ function isArrayBufferView(val) {
 
 /**
  * Determine if a value is a String
- *
+ * 检测String类型
  * @param {*} val The value to test
  *
  * @returns {boolean} True if value is a String, otherwise false
@@ -90,7 +90,7 @@ const isString = typeOfTest('string');
 
 /**
  * Determine if a value is a Function
- *
+ * 检测函数类型
  * @param {*} val The value to test
  * @returns {boolean} True if value is a Function, otherwise false
  */
@@ -98,7 +98,7 @@ const isFunction = typeOfTest('function');
 
 /**
  * Determine if a value is a Number
- *
+ * 检测数字类型
  * @param {*} val The value to test
  *
  * @returns {boolean} True if value is a Number, otherwise false
@@ -107,7 +107,7 @@ const isNumber = typeOfTest('number');
 
 /**
  * Determine if a value is an Object
- *
+ * 检测是否为对象
  * @param {*} thing The value to test
  *
  * @returns {boolean} True if value is an Object, otherwise false
@@ -116,7 +116,7 @@ const isObject = (thing) => thing !== null && typeof thing === 'object';
 
 /**
  * Determine if a value is a Boolean
- *
+ * 检测布尔类型
  * @param {*} thing The value to test
  * @returns {boolean} True if value is a Boolean, otherwise false
  */
@@ -141,7 +141,7 @@ const isPlainObject = (val) => {
 
 /**
  * Determine if a value is a Date
- *
+ * 检测Date类型
  * @param {*} val The value to test
  *
  * @returns {boolean} True if value is a Date, otherwise false
@@ -150,7 +150,7 @@ const isDate = kindOfTest('Date');
 
 /**
  * Determine if a value is a File
- *
+ * 检测File类型
  * @param {*} val The value to test
  *
  * @returns {boolean} True if value is a File, otherwise false
@@ -159,7 +159,7 @@ const isFile = kindOfTest('File');
 
 /**
  * Determine if a value is a Blob
- *
+ * 检测是否为Blob类型
  * @param {*} val The value to test
  *
  * @returns {boolean} True if value is a Blob, otherwise false
@@ -177,7 +177,8 @@ const isFileList = kindOfTest('FileList');
 
 /**
  * Determine if a value is a Stream
- *
+ * 检测是否为Stream类型
+ * 函数有pipe方法认为是Stream
  * @param {*} val The value to test
  *
  * @returns {boolean} True if value is a Stream, otherwise false
@@ -219,10 +220,12 @@ const [isReadableStream, isRequest, isResponse, isHeaders] = ['ReadableStream', 
 
 /**
  * Trim excess whitespace off the beginning and end of a string
- *
- * @param {String} str The String to trim
- *
- * @returns {String} The String freed of excess whitespace
+ * 去除字符串首尾的空白字符
+ * 如果字符串对象有trim方法，直接使用；否则，使用正则表达式替换开头和结尾的空白字符。
+ * 检查trim方法存在的原因是为了兼容旧版本JavaScript或可能不支持String.prototype.trim方法的环境。
+ * 
+ * @param {String} str 需要去除空白字符的字符串
+ * @returns {String} 去除首尾空白字符后的字符串
  */
 const trim = (str) => str.trim ?
   str.trim() : str.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
@@ -292,13 +295,14 @@ function findKey(obj, key) {
   return null;
 }
 
+// 全局对象
 const _global = (() => {
   /*eslint no-undef:0*/
   if (typeof globalThis !== "undefined") return globalThis;
   return typeof self !== "undefined" ? self : (typeof window !== 'undefined' ? window : global)
 })();
 
-// 
+// 给定的上下文是否被定义且不等于全局对象
 const isContextDefined = (context) => !isUndefined(context) && context !== _global;
 
 /**
@@ -372,7 +376,7 @@ const extend = (a, b, thisArg, { allOwnKeys } = {}) => {
 
 /**
  * Remove byte order marker. This catches EF BB BF (the UTF-8 BOM)
- *
+ * 移除BOM头
  * @param {string} content with BOM
  *
  * @returns {string} content value without BOM
@@ -386,19 +390,23 @@ const stripBOM = (content) => {
 
 /**
  * Inherit the prototype methods from one constructor into another
- * @param {function} constructor
- * @param {function} superConstructor
- * @param {object} [props]
- * @param {object} [descriptors]
- *
- * @returns {void}
+ * 实现类的继承
+ * 该函数用于设置一个类（constructor）继承自另一个类（superConstructor），并可以额外添加属性（props）和描述符（descriptors）。
+ * @param {Function} constructor - 要继承的子类构造函数。
+ * @param {Function} superConstructor - 要继承的父类构造函数。
+ * @param {Object} [props] - 可选参数，子类原型上要添加的属性对象。
+ * @param {Object} [descriptors] - 可选参数，子类原型上要添加的属性描述符对象。
  */
 const inherits = (constructor, superConstructor, props, descriptors) => {
+  // 通过Object.create实现继承，设置constructor的原型为superConstructor的原型对象，以实现继承。
   constructor.prototype = Object.create(superConstructor.prototype, descriptors);
+  // 确保constructor的prototype.constructor指向constructor本身，以保持构造函数的链。
   constructor.prototype.constructor = constructor;
+  // 添加一个名为'super'的属性到constructor上，指向父类的原型对象，以便在子类中能够访问父类的方法。
   Object.defineProperty(constructor, 'super', {
     value: superConstructor.prototype
   });
+  // 如果props存在，则将其属性合并到constructor的原型对象上，以添加子类自己的属性。
   props && Object.assign(constructor.prototype, props);
 }
 
@@ -443,21 +451,29 @@ const toFlatObject = (sourceObj, destObj, filter, propFilter) => {
 }
 
 /**
- * Determines whether a string ends with the characters of a specified string
- *
- * @param {String} str
- * @param {String} searchString
- * @param {Number} [position= 0]
- *
- * @returns {boolean}
+ *  Determines whether a string ends with the characters of a specified string
+ * 检查字符串是否以指定的子字符串结尾。 * 
+ * @param {string} str 原始字符串。
+ * @param {string} searchString 要查找的子字符串。
+ * @param {number} position 可选参数，指定要检查的结束位置。
+ * @returns {boolean} 如果原始字符串以子字符串结尾，则返回true；否则返回false。
  */
 const endsWith = (str, searchString, position) => {
+  // 将输入的参数转换为字符串，确保类型一致性
   str = String(str);
+
+  // 如果未指定位置或指定位置超出了字符串长度，则将位置设置为字符串的末尾
   if (position === undefined || position > str.length) {
     position = str.length;
   }
+
+  // 调整位置参数，使其相对于子字符串的长度
   position -= searchString.length;
+
+  // 从调整后的位置开始查找子字符串在原始字符串中的最后出现位置
   const lastIndex = str.indexOf(searchString, position);
+
+  // 返回布尔值，表示子字符串是否出现在指定位置，从而确定原始字符串是否以子字符串结尾
   return lastIndex !== -1 && lastIndex === position;
 }
 
@@ -493,9 +509,22 @@ const toArray = (thing) => {
  * @returns {Array}
  */
 // eslint-disable-next-line func-names
+/**
+ * 判断一个对象是否为指定类型的TypedArray。
+ * 
+ * 该函数通过检查对象是否是TypedArray的实例来确定它是否为TypedArray。
+ * 它使用了函数柯里化的技术，首先接受一个TypedArray的构造函数的原型作为参数，
+ * 然后返回一个函数，这个函数接受一个对象作为参数，并判断该对象是否是传入的TypedArray构造函数的实例。
+ * 这种做法允许在不同的环境中灵活地判断不同类型的TypedArray，比如在浏览器和Node.js中。
+ * 
+ * @param {Object} TypedArrayPrototype - TypedArray构造函数的原型对象。
+ * @returns {Function} - 返回一个函数，用于判断传入的对象是否为指定类型的TypedArray实例。
+ */
 const isTypedArray = (TypedArray => {
+  // 返回一个函数，该函数接受一个对象作为参数
   // eslint-disable-next-line func-names
   return thing => {
+    // 判断传入的对象是否为TypedArray构造函数的实例
     return TypedArray && thing instanceof TypedArray;
   };
 })(typeof Uint8Array !== 'undefined' && getPrototypeOf(Uint8Array));
@@ -554,6 +583,14 @@ const toCamelCase = str => {
 };
 
 /* Creating a function that will check if an object has a property. */
+/**
+ * 创建一个名为hasOwnProperty的函数，该函数用于检查一个对象是否具有指定的属性。
+ * 这个函数封装了Object.prototype.hasOwnProperty方法，以避免在使用时出现任何潜在的原型链污染问题。
+ * 
+ * @param {Object} obj - 要检查的对象。
+ * @param {string} prop - 要检查的属性名称。
+ * @returns {boolean} 如果对象具有指定的属性，则返回true；否则返回false。
+ */
 const hasOwnProperty = (({ hasOwnProperty }) => (obj, prop) => hasOwnProperty.call(obj, prop))(Object.prototype);
 
 /**
@@ -617,6 +654,17 @@ const freezeMethods = (obj) => {
   });
 }
 
+/**
+ * 将数组或字符串转换为对象集合。
+ * 
+ * 该函数的目的是通过给定的参数（数组或字符串）和分隔符，创建一个对象，
+ * 对象的属性由数组元素或字符串分割后的值组成，属性值均为true。
+ * 这种转换有助于快速检查某个元素是否存在于原始数组或字符串中，通过对象的属性访问方式。
+ * 
+ * @param {Array|string} arrayOrString - 要转换的数组或字符串。
+ * @param {string} delimiter - 如果参数是字符串，则使用此分隔符将字符串分割成数组。
+ * @returns {Object} - 返回一个对象，其中属性由数组元素或字符串分割后的值组成。
+ */
 const toObjectSet = (arrayOrString, delimiter) => {
   const obj = {};
 
@@ -631,9 +679,12 @@ const toObjectSet = (arrayOrString, delimiter) => {
   return obj;
 }
 
+// 空函数
 const noop = () => { }
 
+// 将value转为有限的数字
 const toFiniteNumber = (value, defaultValue) => {
+  // 转为数字后如果有限则直接返回，否则返回默认值
   return value != null && Number.isFinite(value = +value) ? value : defaultValue;
 }
 
@@ -647,6 +698,7 @@ const ALPHABET = {
   ALPHA_DIGIT: ALPHA + ALPHA.toUpperCase() + DIGIT
 }
 
+// 根据指定的字符集，生成指定长度的随机字符串
 const generateString = (size = 16, alphabet = ALPHABET.ALPHA_DIGIT) => {
   let str = '';
   const { length } = alphabet;
@@ -670,39 +722,43 @@ function isSpecCompliantForm(thing) {
   return !!(thing && isFunction(thing.append) && thing[Symbol.toStringTag] === 'FormData' && thing[Symbol.iterator]);
 }
 
+// 将对象转为JSON形式的等价物
 const toJSONObject = (obj) => {
-  const stack = new Array(10);
+  const stack = new Array(10); // 用于检测循环引用的堆栈
 
   const visit = (source, i) => {
 
-    if (isObject(source)) {
-      if (stack.indexOf(source) >= 0) {
+    if (isObject(source)) { // 是否为对象
+      if (stack.indexOf(source) >= 0) { // 检测循环引用
         return;
       }
 
-      if (!('toJSON' in source)) {
-        stack[i] = source;
-        const target = isArray(source) ? [] : {};
+      if (!('toJSON' in source)) { // 对象有自定义的toJSON方法
+        stack[i] = source; // 对象入栈
+        const target = isArray(source) ? [] : {}; // 根据source的类型初始化target
 
         forEach(source, (value, key) => {
-          const reducedValue = visit(value, i + 1);
+          const reducedValue = visit(value, i + 1); // 递归调用visit
+          // 如果reducedValue不为undefined，将其结果赋值给target对应的属性
           !isUndefined(reducedValue) && (target[key] = reducedValue);
         });
 
-        stack[i] = undefined;
+        stack[i] = undefined; // 出栈
 
-        return target;
+        return target; // 返回目标对象
       }
     }
-
+    // 不是对象或者具有toJSON方法，则直接返回
     return source;
   }
 
   return visit(obj, 0);
 }
 
+// 是否为async函数
 const isAsyncFn = kindOfTest('AsyncFunction');
 
+// 是否为thenable对象
 const isThenable = (thing) =>
   thing && (isObject(thing) || isFunction(thing)) && isFunction(thing.then) && isFunction(thing.catch);
 

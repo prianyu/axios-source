@@ -4,13 +4,13 @@ import utils from './../utils.js';
 import settle from './../core/settle.js';
 import buildFullPath from '../core/buildFullPath.js';
 import buildURL from './../helpers/buildURL.js';
-import {getProxyForUrl} from 'proxy-from-env';
+import { getProxyForUrl } from 'proxy-from-env';
 import http from 'http';
 import https from 'https';
 import util from 'util';
 import followRedirects from 'follow-redirects';
 import zlib from 'zlib';
-import {VERSION} from '../env/data.js';
+import { VERSION } from '../env/data.js';
 import transitionalDefaults from '../defaults/transitional.js';
 import AxiosError from '../core/AxiosError.js';
 import CanceledError from '../cancel/CanceledError.js';
@@ -19,7 +19,7 @@ import fromDataURI from '../helpers/fromDataURI.js';
 import stream from 'stream';
 import AxiosHeaders from '../core/AxiosHeaders.js';
 import AxiosTransformStream from '../helpers/AxiosTransformStream.js';
-import {EventEmitter} from 'events';
+import { EventEmitter } from 'events';
 import formDataToStream from "../helpers/formDataToStream.js";
 import readBlob from "../helpers/readBlob.js";
 import ZlibHeaderTransformStream from '../helpers/ZlibHeaderTransformStream.js';
@@ -37,7 +37,7 @@ const brotliOptions = {
 
 const isBrotliSupported = utils.isFunction(zlib.createBrotliDecompress);
 
-const {http: httpFollow, https: httpsFollow} = followRedirects;
+const { http: httpFollow, https: httpsFollow } = followRedirects;
 
 const isHttps = /https:?/;
 
@@ -144,7 +144,7 @@ const wrapAsync = (asyncExecutor) => {
   })
 };
 
-const resolveFamily = ({address, family}) => {
+const resolveFamily = ({ address, family }) => {
   if (!utils.isString(address)) {
     throw TypeError('address must be a string');
   }
@@ -154,13 +154,13 @@ const resolveFamily = ({address, family}) => {
   });
 }
 
-const buildAddressEntry = (address, family) => resolveFamily(utils.isObject(address) ? address : {address, family});
+const buildAddressEntry = (address, family) => resolveFamily(utils.isObject(address) ? address : { address, family });
 
 /*eslint consistent-return:0*/
 export default isHttpAdapterSupported && function httpAdapter(config) {
   return wrapAsync(async function dispatchHttpRequest(resolve, reject, onDone) {
-    let {data, lookup, family} = config;
-    const {responseType, responseEncoding} = config;
+    let { data, lookup, family } = config;
+    const { responseType, responseEncoding } = config;
     const method = config.method.toUpperCase();
     let isDone;
     let rejected = false;
@@ -348,7 +348,7 @@ export default isHttpAdapterSupported && function httpAdapter(config) {
 
     if (data && (onUploadProgress || maxUploadRate)) {
       if (!utils.isStream(data)) {
-        data = stream.Readable.from(data, {objectMode: false});
+        data = stream.Readable.from(data, { objectMode: false });
       }
 
       data = stream.pipeline([data, new AxiosTransformStream({
@@ -398,7 +398,7 @@ export default isHttpAdapterSupported && function httpAdapter(config) {
     headers.set(
       'Accept-Encoding',
       'gzip, compress, deflate' + (isBrotliSupported ? ', br' : ''), false
-      );
+    );
 
     const options = {
       path,
@@ -489,31 +489,31 @@ export default isHttpAdapterSupported && function httpAdapter(config) {
         }
 
         switch ((res.headers['content-encoding'] || '').toLowerCase()) {
-        /*eslint default-case:0*/
-        case 'gzip':
-        case 'x-gzip':
-        case 'compress':
-        case 'x-compress':
-          // add the unzipper to the body stream processing pipeline
-          streams.push(zlib.createUnzip(zlibOptions));
+          /*eslint default-case:0*/
+          case 'gzip':
+          case 'x-gzip':
+          case 'compress':
+          case 'x-compress':
+            // add the unzipper to the body stream processing pipeline
+            streams.push(zlib.createUnzip(zlibOptions));
 
-          // remove the content-encoding in order to not confuse downstream operations
-          delete res.headers['content-encoding'];
-          break;
-        case 'deflate':
-          streams.push(new ZlibHeaderTransformStream());
-
-          // add the unzipper to the body stream processing pipeline
-          streams.push(zlib.createUnzip(zlibOptions));
-
-          // remove the content-encoding in order to not confuse downstream operations
-          delete res.headers['content-encoding'];
-          break;
-        case 'br':
-          if (isBrotliSupported) {
-            streams.push(zlib.createBrotliDecompress(brotliOptions));
+            // remove the content-encoding in order to not confuse downstream operations
             delete res.headers['content-encoding'];
-          }
+            break;
+          case 'deflate':
+            streams.push(new ZlibHeaderTransformStream());
+
+            // add the unzipper to the body stream processing pipeline
+            streams.push(zlib.createUnzip(zlibOptions));
+
+            // remove the content-encoding in order to not confuse downstream operations
+            delete res.headers['content-encoding'];
+            break;
+          case 'br':
+            if (isBrotliSupported) {
+              streams.push(zlib.createBrotliDecompress(brotliOptions));
+              delete res.headers['content-encoding'];
+            }
         }
       }
 

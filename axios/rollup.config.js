@@ -1,6 +1,6 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import {terser} from "rollup-plugin-terser";
+import { terser } from "rollup-plugin-terser";
 import json from '@rollup/plugin-json';
 import { babel } from '@rollup/plugin-babel';
 import autoExternal from 'rollup-plugin-auto-external';
@@ -11,18 +11,18 @@ import path from 'path';
 const lib = require("./package.json");
 const outputFileName = 'axios';
 const name = "axios";
-const namedInput = './index.js';
-const defaultInput = './lib/axios.js';
+const namedInput = './index.js'; // 命名导出的入口文件
+const defaultInput = './lib/axios.js'; // 默认导出的入口文件
 
-const buildConfig = ({es5, browser = true, minifiedVersion = true, alias, ...config}) => {
-  const {file} = config.output;
+const buildConfig = ({ es5, browser = true, minifiedVersion = true, alias, ...config }) => {
+  const { file } = config.output;
   const ext = path.extname(file);
   const basename = path.basename(file, ext);
   const extArr = ext.split('.');
   extArr.shift();
 
 
-  const build = ({minified}) => ({
+  const build = ({ minified }) => ({
     input: namedInput,
     ...config,
     output: {
@@ -34,7 +34,7 @@ const buildConfig = ({es5, browser = true, minifiedVersion = true, alias, ...con
         entries: alias || []
       }),
       json(),
-      resolve({browser}),
+      resolve({ browser }),
       commonjs(),
 
       minified && terser(),
@@ -48,11 +48,11 @@ const buildConfig = ({es5, browser = true, minifiedVersion = true, alias, ...con
   });
 
   const configs = [
-    build({minified: false}),
+    build({ minified: false }),
   ];
 
   if (minifiedVersion) {
-    configs.push(build({minified: true}))
+    configs.push(build({ minified: true }))
   }
 
   return configs;
@@ -64,6 +64,7 @@ export default async () => {
 
   return [
     // browser ESM bundle for CDN
+    // 浏览器ESM bundle
     ...buildConfig({
       input: namedInput,
       output: {
@@ -76,21 +77,22 @@ export default async () => {
     }),
     // browser ESM bundle for CDN with fetch adapter only
     // Downsizing from 12.97 kB (gzip) to 12.23 kB (gzip)
-/*    ...buildConfig({
-      input: namedInput,
-      output: {
-        file: `dist/esm/${outputFileName}-fetch.js`,
-        format: "esm",
-        preferConst: true,
-        exports: "named",
-        banner
-      },
-      alias: [
-        { find: './xhr.js', replacement: '../helpers/null.js' }
-      ]
-    }),*/
+    /*    ...buildConfig({
+          input: namedInput,
+          output: {
+            file: `dist/esm/${outputFileName}-fetch.js`,
+            format: "esm",
+            preferConst: true,
+            exports: "named",
+            banner
+          },
+          alias: [
+            { find: './xhr.js', replacement: '../helpers/null.js' }
+          ]
+        }),*/
 
     // Browser UMD bundle for CDN
+    // 浏览器UMD模块
     ...buildConfig({
       input: defaultInput,
       es5: true,
@@ -104,6 +106,7 @@ export default async () => {
     }),
 
     // Browser CJS bundle
+    // 浏览器CJS模块
     ...buildConfig({
       input: defaultInput,
       es5: false,
