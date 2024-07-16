@@ -11,7 +11,7 @@ function normalizeHeader(header) {
 }
 
 
-// 规范化header值
+// 规范化header的值
 function normalizeValue(value) {
   // false和null直接返回
   if (value === false || value == null) {
@@ -78,16 +78,22 @@ function matchHeaderValue(context, value, header, filter, isHeaderNameFilter) {
   }
 }
 
+// 格式化头部名称，转为首字母大写的单词
 function formatHeader(header) {
+  // 去除首尾空格后转为全小写
+  // 匹配每个单词的首字母，然后转为大写
   return header.trim()
     .toLowerCase().replace(/([a-z\d])(\w*)/g, (w, char, str) => {
       return char.toUpperCase() + str;
     });
 }
-
+// 动态创建访问器方法（getter、setter、has）用于访问或者设置某个头
+// 如getContentType,setContentType,hasContentType
 function buildAccessors(obj, header) {
+  // 转为驼峰命名字符串
   const accessorName = utils.toCamelCase(' ' + header);
 
+  // 创建访问器方法
   ['get', 'set', 'has'].forEach(methodName => {
     Object.defineProperty(obj, methodName + accessorName, {
       value: function (arg1, arg2, arg3) {
@@ -103,6 +109,7 @@ class AxiosHeaders {
     headers && this.set(headers);
   }
 
+  // 设置header
   set(header, valueOrRewrite, rewrite) {
     const self = this;
 
@@ -246,37 +253,55 @@ class AxiosHeaders {
     return deleted;
   }
 
+  // 格式化header：名称和值都会格式化
+  // 当format为true时格式化后的header名称为首字母大写，且去掉收尾的空格
+  // 当format为false时，只是header名称去掉收尾空格
+  // 格式化后同名的header后面的会覆盖前面的
   normalize(format) {
     const self = this;
     const headers = {};
 
     utils.forEach(this, (value, header) => {
+      // 在格式化标记对象中查找key
       const key = utils.findKey(headers, header);
 
-      if (key) {
+      // { "x-Custom": '222', "x-custom": '111'} =>
+      // format: true => {"X-Custom": '111"}
+      // format: false => {"x-Custom": '111'}
+      if (key) { // 找到了说明该header已经格式化过了
+        // 重新设置值
         self[key] = normalizeValue(value);
+        // 删除原始header
         delete self[header];
         return;
       }
 
+      // 格式化header名称，如果format不为false，则去除收尾空格后转为首字母大小的单词拼接
+      // 否则只去除首尾的空格
       const normalized = format ? formatHeader(header) : String(header).trim();
 
+      // 格式化后名称不一致，则删除原有的header
       if (normalized !== header) {
         delete self[header];
       }
 
+      // 添加值和名称都格式化后的header
       self[normalized] = normalizeValue(value);
-
+      // 标记为已格式化
       headers[normalized] = true;
     });
 
     return this;
   }
 
+  // 使用静态方法，将当前实例 与传入的多个目标对象合并并返回
   concat(...targets) {
     return this.constructor.concat(this, ...targets);
   }
 
+  // 将当前实例转换为JSON对象
+  // 如果asStrings为true，则将数组类型的header值转换为逗号分隔的字符串
+  // 否则直接返回数组类型的值
   toJSON(asStrings) {
     const obj = Object.create(null);
 
@@ -287,10 +312,12 @@ class AxiosHeaders {
     return obj;
   }
 
+  // 添加Symbol.iterator属性，返回一个迭代器
   [Symbol.iterator]() {
     return Object.entries(this.toJSON())[Symbol.iterator]();
   }
 
+  // 添加toString方法，返回对象字符串
   toString() {
     return Object.entries(this.toJSON()).map(([header, value]) => header + ': ' + value).join('\n');
   }
@@ -305,41 +332,57 @@ class AxiosHeaders {
     return thing instanceof this ? thing : new this(thing);
   }
 
+  // 合并两个对象
   static concat(first, ...targets) {
-    const computed = new this(first);
+    const computed = new this(first); // 创建一个新的实例
 
+    // 遍历合并目标对象
     targets.forEach((target) => computed.set(target));
 
+    // 返回合并后的实例
     return computed;
   }
 
+  // 添加访问器方法
+  // 在AxiosHeaders.prototype上添加以`get`,`set`,`has`开头+以驼峰命名的头部名称的访问器
+  // 用于更加便捷的访问和设置响应的头部信息
   static accessor(header) {
     const internals = this[$internals] = (this[$internals] = {
       accessors: {}
     });
 
-    const accessors = internals.accessors;
-    const prototype = this.prototype;
+    const accessors = internals.accessors; // 访问器对象
+    const prototype = this.prototype; // 原型
 
+    // 用于定义访问器的函数
     function defineAccessor(_header) {
-      const lHeader = normalizeHeader(_header);
+      const lHeader = normalizeHeader(_header); // 去除收尾空格并转为小写
 
-      if (!accessors[lHeader]) {
-        buildAccessors(prototype, _header);
+      if (!accessors[lHeader]) { // 未定义
+        buildAccessors(prototype, _header); // 在原型上添加访问器方法
         accessors[lHeader] = true;
       }
     }
 
     utils.isArray(header) ? header.forEach(defineAccessor) : defineAccessor(header);
 
+    // 支持链式调用
     return this;
   }
 }
 
+// 创建访问器
+// 在原型上添加getContentType,setContentType,hasContentType等方法
 AxiosHeaders.accessor(['Content-Type', 'Content-Length', 'Accept', 'Accept-Encoding', 'User-Agent', 'Authorization']);
 
 // reserved names hotfix
+// 解决保留关键字命名冲突的问题
+// 以上AxiosHeaders.prototype上添加了一些属性描述符
+// 如果被重写则可能会导致不可预期的行为，如：AxiosHeaders.prototype.getContentType = 123
+// 为了避免这些行为发生，所以将这些内置的描述符以及原始的描述符作为保留关键词
+// 重写其getter和setter，避免被直接修改
 utils.reduceDescriptors(AxiosHeaders.prototype, ({ value }, key) => {
+  // 将key映射为首字母大写的key
   let mapped = key[0].toUpperCase() + key.slice(1); // map `set` => `Set`
   return {
     get: () => value,
@@ -349,6 +392,19 @@ utils.reduceDescriptors(AxiosHeaders.prototype, ({ value }, key) => {
   }
 });
 
+// 冻结AxiosHeaders的方法，将其设置成不可修改和枚举
 utils.freezeMethods(AxiosHeaders);
 
 export default AxiosHeaders;
+
+/** 
+const headers = new AxiosHeaders({ "x-Custom": '222', "x-custom": '111' })
+AxiosHeaders.accessor("x-Custom") // 自定义访问器
+headers.normalize(true) // 格式化
+console.log(headers)
+console.log(headers.hasXCustom()) // true
+AxiosHeaders.prototype.getContentType = 123 // 保留关键字
+console.log(headers.GetContentType) // 123
+AxiosHeaders.accessor = 1235 // 方法冻结， Error
+
+*/

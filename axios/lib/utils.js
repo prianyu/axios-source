@@ -534,7 +534,9 @@ const matchAll = (regExp, str) => {
 /* Checking if the kindOfTest function returns true when passed an HTMLFormElement. */
 const isHTMLForm = kindOfTest('HTMLFormElement');
 
+// 转为驼峰命名的字符串
 const toCamelCase = str => {
+  // 匹配-_和空格开头的字符，去掉-_和空格，然后把第一个字母大写，其他字母保留
   return str.toLowerCase().replace(/[-_\s]([a-z\d])(\w*)/g,
     function replacer(m, p1, p2) {
       return p1.toUpperCase() + p2;
@@ -554,43 +556,50 @@ const hasOwnProperty = (({ hasOwnProperty }) => (obj, prop) => hasOwnProperty.ca
  */
 const isRegExp = kindOfTest('RegExp');
 
+// 遍历对象的所有属性描述符，根据提供的reducer来修改这些描述符
+// 并重新定义到原对象上
 const reduceDescriptors = (obj, reducer) => {
-  const descriptors = Object.getOwnPropertyDescriptors(obj);
+  const descriptors = Object.getOwnPropertyDescriptors(obj); // 获取属性描述符
   const reducedDescriptors = {};
 
   forEach(descriptors, (descriptor, name) => {
     let ret;
-    if ((ret = reducer(descriptor, name, obj)) !== false) {
+    if ((ret = reducer(descriptor, name, obj)) !== false) { // 使用回调函数处理描述符
+      // 如果执行结果不为false，则使用新的描述符，否则使用原始的描述符
       reducedDescriptors[name] = ret || descriptor;
     }
   });
 
+  // 重新定义属性描述符
   Object.defineProperties(obj, reducedDescriptors);
 }
 
 /**
  * Makes all methods read-only
+ * 冻结对象的方法，使其变成只读且不可枚举
  * @param {Object} obj
  */
 
 const freezeMethods = (obj) => {
   reduceDescriptors(obj, (descriptor, name) => {
     // skip restricted props in strict mode
+    // 跳过严格模式下受限制的属性
     if (isFunction(obj) && ['arguments', 'caller', 'callee'].indexOf(name) !== -1) {
       return false;
     }
 
     const value = obj[name];
 
-    if (!isFunction(value)) return;
+    if (!isFunction(value)) return; // 非方法
 
-    descriptor.enumerable = false;
+    descriptor.enumerable = false; // 设置成不可枚举
 
-    if ('writable' in descriptor) {
+    if ('writable' in descriptor) { // 设置成不可写
       descriptor.writable = false;
       return;
     }
 
+    // 没有定义setter时，对其设置则抛出错误
     if (!descriptor.set) {
       descriptor.set = () => {
         throw Error('Can not rewrite read-only method \'' + name + '\'');
