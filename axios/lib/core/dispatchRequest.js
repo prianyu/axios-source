@@ -27,6 +27,7 @@ function throwIfCancellationRequested(config) {
 
 /**
  * Dispatch a request to the server using the configured adapter.
+ * 使用配置的适配器发送请求
  *
  * @param {object} config The config that is to be used for the request
  *

@@ -168,7 +168,7 @@ const isBlob = kindOfTest('Blob');
 
 /**
  * Determine if a value is a FileList
- *
+ * 检查是否为fileList
  * @param {*} val The value to test
  *
  * @returns {boolean} True if value is a File, otherwise false
@@ -186,6 +186,7 @@ const isStream = (val) => isObject(val) && isFunction(val.pipe);
 
 /**
  * Determine if a value is a FormData
+ * 检查是否为FormData
  *
  * @param {*} thing The value to test
  *
@@ -403,10 +404,12 @@ const inherits = (constructor, superConstructor, props, descriptors) => {
 
 /**
  * Resolve object with deep prototype chain to a flat object
- * @param {Object} sourceObj source object
- * @param {Object} [destObj]
- * @param {Function|Boolean} [filter]
- * @param {Function} [propFilter]
+ * 将源对象的属性以及原型链上的属性平铺到目标对象上
+ * 支持通过过滤器函数来控制哪些属性应该被合并
+ * @param {Object} sourceObj source object 源对象
+ * @param {Object} [destObj] 目标对象，属性会被合并到该对象上
+ * @param {Function|Boolean} [filter] 是否复制原型链上的属性，false为不复制
+ * @param {Function} [propFilter] 可选的过滤器函数，用于筛选要合并的对象，返回true则表示该属性可以被合并
  *
  * @returns {Object}
  */
@@ -425,11 +428,14 @@ const toFlatObject = (sourceObj, destObj, filter, propFilter) => {
     i = props.length;
     while (i-- > 0) {
       prop = props[i];
+      // 没有定义propFilter或者propFilter通过且为合并
+      // 则将sourceObj[prop]复制到destObj
       if ((!propFilter || propFilter(prop, sourceObj, destObj)) && !merged[prop]) {
         destObj[prop] = sourceObj[prop];
-        merged[prop] = true;
+        merged[prop] = true; // 标记为已合并
       }
     }
+    // filter不为false，则获取链上的下一个对象继续合并
     sourceObj = filter !== false && getPrototypeOf(sourceObj);
   } while (sourceObj && (!filter || filter(sourceObj, destObj)) && sourceObj !== Object.prototype);
 
@@ -458,17 +464,20 @@ const endsWith = (str, searchString, position) => {
 
 /**
  * Returns new array from array like object or null if failed
+ * 将一个array-like对象转为数组，转换失败则返回null
  *
  * @param {*} [thing]
  *
  * @returns {?Array}
  */
 const toArray = (thing) => {
-  if (!thing) return null;
-  if (isArray(thing)) return thing;
+  if (!thing) return null; // 空值直接返回null
+  if (isArray(thing)) return thing; // 数组直接返回数组
   let i = thing.length;
-  if (!isNumber(i)) return null;
-  const arr = new Array(i);
+  if (!isNumber(i)) return null; // 没有length属性则不是array-like，返回null
+  // array-like
+  const arr = new Array(i); // 创建新数组
+  // 遍历array-like转为数组元素
   while (i-- > 0) {
     arr[i] = thing[i];
   }
@@ -532,7 +541,7 @@ const matchAll = (regExp, str) => {
 }
 
 /* Checking if the kindOfTest function returns true when passed an HTMLFormElement. */
-const isHTMLForm = kindOfTest('HTMLFormElement');
+const isHTMLForm = kindOfTest('HTMLFormElement'); // 是否为form标签
 
 // 转为驼峰命名的字符串
 const toCamelCase = str => {
@@ -650,6 +659,8 @@ const generateString = (size = 16, alphabet = ALPHABET.ALPHA_DIGIT) => {
 
 /**
  * If the thing is a FormData object, return true, otherwise return false.
+ *  用于检查一个对象是否符合规范的 FormData 对象
+ * 具有append方法、Symbol.toStringTag为FormData，且部署了Symbol.iterator
  *
  * @param {unknown} thing - The thing to check.
  *
