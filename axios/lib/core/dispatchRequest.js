@@ -13,14 +13,16 @@ import adapters from "../adapters/adapters.js";
  * @param {Object} config The config that is to be used for the request
  *
  * @returns {void}
- * 如果请求已发出，根据请求的取消令牌或者信号撤销请求
+ * 根据请求的取消令牌或者信号判断是否已经撤销请求
  */
 function throwIfCancellationRequested(config) {
-  if (config.cancelToken) { // 配置了请求令牌
+  if (config.cancelToken) {
+    // 配置了请求令牌，则检查是否已撤销
+    // 如果已经撤销了请求，则会抛出CanceledError异常
     config.cancelToken.throwIfRequested();
   }
-
-  if (config.signal && config.signal.aborted) { // 取消信号
+  // 如果配置了取消信号，且已经撤销了请求，则会抛出CanceledError异常
+  if (config.signal && config.signal.aborted) {
     throw new CanceledError(null, config);
   }
 }
@@ -34,7 +36,7 @@ function throwIfCancellationRequested(config) {
  * @returns {Promise} The Promise to be fulfilled
  */
 export default function dispatchRequest(config) {
-  throwIfCancellationRequested(config); // 撤销请求处理
+  throwIfCancellationRequested(config); // 撤销请求处理，已撤销会抛出错误
 
   config.headers = AxiosHeaders.from(config.headers);  // 实例化请求头为AxiosHeaders实例
 
@@ -55,7 +57,7 @@ export default function dispatchRequest(config) {
 
   // 发起请求
   return adapter(config).then(function onAdapterResolution(response) { // 请求成功处理
-    throwIfCancellationRequested(config); // 撤销请求处理
+    throwIfCancellationRequested(config); // 撤销请求处理，已撤销会抛出错误
 
     // Transform response data
     // 转换响应数据
@@ -70,8 +72,9 @@ export default function dispatchRequest(config) {
 
     return response;
   }, function onAdapterRejection(reason) { // 请求失败处理
-    if (!isCancel(reason)) { // reason是否有__CANCEL__属性且非falsy
-      throwIfCancellationRequested(config); // 处理撤销请求
+    // 如果不是CancelError
+    if (!isCancel(reason)) {
+      throwIfCancellationRequested(config); // 撤销请求处理，已撤销会抛出错误
 
       // Transform response data
       // 如果reason上有response属性，则转换响应数据
