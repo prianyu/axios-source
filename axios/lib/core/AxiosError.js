@@ -4,32 +4,35 @@ import utils from '../utils.js';
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
- *
- * @param {string} message The error message.
- * @param {string} [code] The error code (for example, 'ECONNABORTED').
- * @param {Object} [config] The config.
- * @param {Object} [request] The request.
- * @param {Object} [response] The response.
+ * 用于创建AxiosError
+ * @param {string} message The error message. 错误信息
+ * @param {string} [code] The error code (for example, 'ECONNABORTED'). 错误代码
+ * @param {Object} [config] The config. 请求配置
+ * @param {Object} [request] The request. 请求对象
+ * @param {Object} [response] The response. 响应对象
  *
  * @returns {Error} The created error.
  */
 function AxiosError(message, code, config, request, response) {
-  Error.call(this);
+  Error.call(this); // 继承Error对象的属性和方法
 
-  if (Error.captureStackTrace) {
+  // 捕获堆栈追踪
+  if (Error.captureStackTrace) { // V8
+    // captureStackTrace会将堆栈跟踪信息分配给this.stack
     Error.captureStackTrace(this, this.constructor);
   } else {
     this.stack = (new Error()).stack;
   }
 
-  this.message = message;
-  this.name = 'AxiosError';
-  code && (this.code = code);
-  config && (this.config = config);
-  request && (this.request = request);
-  response && (this.response = response);
+  this.message = message; // 设置错误信息
+  this.name = 'AxiosError'; // 设置错误名称
+  code && (this.code = code); // 设置错误代码
+  config && (this.config = config); // 设置请求配置
+  request && (this.request = request); // 设置请求对象
+  response && (this.response = response); // 设置响应对象
 }
 
+// 继承Error，并重写toJSON方法
 utils.inherits(AxiosError, Error, {
   toJSON: function toJSON() {
     return {
@@ -45,9 +48,9 @@ utils.inherits(AxiosError, Error, {
       columnNumber: this.columnNumber,
       stack: this.stack,
       // Axios
-      config: utils.toJSONObject(this.config),
-      code: this.code,
-      status: this.response && this.response.status ? this.response.status : null
+      config: utils.toJSONObject(this.config), // axios配置
+      code: this.code, // axios错误码
+      status: this.response && this.response.status ? this.response.status : null // 响应状态码
     };
   }
 });
@@ -68,13 +71,13 @@ const descriptors = {};
   'ERR_CANCELED',
   'ERR_NOT_SUPPORT',
   'ERR_INVALID_URL'
-// eslint-disable-next-line func-names
+  // eslint-disable-next-line func-names
 ].forEach(code => {
-  descriptors[code] = {value: code};
+  descriptors[code] = { value: code };
 });
 
-Object.defineProperties(AxiosError, descriptors);
-Object.defineProperty(prototype, 'isAxiosError', {value: true});
+Object.defineProperties(AxiosError, descriptors); // 添加静态属性
+Object.defineProperty(prototype, 'isAxiosError', { value: true }); // 原型上增加AxiosError标记
 
 // eslint-disable-next-line func-names
 AxiosError.from = (error, code, config, request, response, customProps) => {
