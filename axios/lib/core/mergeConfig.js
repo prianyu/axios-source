@@ -3,15 +3,17 @@
 import utils from '../utils.js';
 import AxiosHeaders from "./AxiosHeaders.js";
 
+// 将AxiosHeaders实例转换为对象
 const headersToObject = (thing) => thing instanceof AxiosHeaders ? { ...thing } : thing;
 
 /**
  * Config-specific merge-function which creates a new config-object
  * by merging two configuration objects together.
+ * 合并两个配置对象
+ * @param {Object} config1 基础配置对象
+ * @param {Object} config2 覆盖配置对象
  *
- * @param {Object} config1
- * @param {Object} config2
- *
+ * 返回合并后的新对象
  * @returns {Object} New object resulting from merging config2 to config1
  */
 export default function mergeConfig(config1, config2) {
@@ -19,20 +21,24 @@ export default function mergeConfig(config1, config2) {
   config2 = config2 || {};
   const config = {};
 
+  //合并两个值，以source优先
+  // 目标值，源值，是否忽略属性大小写
   function getMergedValue(target, source, caseless) {
     if (utils.isPlainObject(target) && utils.isPlainObject(source)) {
-      return utils.merge.call({caseless}, target, source);
-    } else if (utils.isPlainObject(source)) {
+      // 两个都是对象，合并两个对象并返回
+      return utils.merge.call({ caseless }, target, source);
+    } else if (utils.isPlainObject(source)) { // 只合并source
       return utils.merge({}, source);
     } else if (utils.isArray(source)) {
-      return source.slice();
+      return source.slice(); // 拷贝source
     }
     return source;
   }
 
   // eslint-disable-next-line consistent-return
+  // 深度合并策略
   function mergeDeepProperties(a, b, caseless) {
-    if (!utils.isUndefined(b)) {
+    if (!utils.isUndefined(b)) { // b优先
       return getMergedValue(a, b, caseless);
     } else if (!utils.isUndefined(a)) {
       return getMergedValue(undefined, a, caseless);
@@ -40,6 +46,7 @@ export default function mergeConfig(config1, config2) {
   }
 
   // eslint-disable-next-line consistent-return
+  // 使用config2获取值
   function valueFromConfig2(a, b) {
     if (!utils.isUndefined(b)) {
       return getMergedValue(undefined, b);
@@ -47,6 +54,7 @@ export default function mergeConfig(config1, config2) {
   }
 
   // eslint-disable-next-line consistent-return
+  // 优先使用config2获取合并后的值
   function defaultToConfig2(a, b) {
     if (!utils.isUndefined(b)) {
       return getMergedValue(undefined, b);
@@ -56,6 +64,7 @@ export default function mergeConfig(config1, config2) {
   }
 
   // eslint-disable-next-line consistent-return
+  // 以config2的属性优先，获取值
   function mergeDirectKeys(a, b, prop) {
     if (prop in config2) {
       return getMergedValue(a, b);
@@ -64,11 +73,13 @@ export default function mergeConfig(config1, config2) {
     }
   }
 
+  // 合并策略映射
+
   const mergeMap = {
-    url: valueFromConfig2,
+    url: valueFromConfig2, // 使用config2的url
     method: valueFromConfig2,
     data: valueFromConfig2,
-    baseURL: defaultToConfig2,
+    baseURL: defaultToConfig2, // 优先使用config2的baseURL
     transformRequest: defaultToConfig2,
     transformResponse: defaultToConfig2,
     paramsSerializer: defaultToConfig2,
@@ -92,15 +103,20 @@ export default function mergeConfig(config1, config2) {
     cancelToken: defaultToConfig2,
     socketPath: defaultToConfig2,
     responseEncoding: defaultToConfig2,
-    validateStatus: mergeDirectKeys,
+    validateStatus: mergeDirectKeys, // config2 key优先
+    // 忽略大小写，深度合并
     headers: (a, b) => mergeDeepProperties(headersToObject(a), headersToObject(b), true)
   };
 
+  // 遍历config1和config2合并后的所有对象属性
   utils.forEach(Object.keys(Object.assign({}, config1, config2)), function computeConfigValue(prop) {
-    const merge = mergeMap[prop] || mergeDeepProperties;
-    const configValue = merge(config1[prop], config2[prop], prop);
+    const merge = mergeMap[prop] || mergeDeepProperties; // 合并策略
+    const configValue = merge(config1[prop], config2[prop], prop); // 合并后的值
+    // 如果合并的结果为undefined且合并策略不是mergeDirectKeys，则不设置
+    // 否则设置值
     (utils.isUndefined(configValue) && merge !== mergeDirectKeys) || (config[prop] = configValue);
   });
 
+  // 返回合并后的新对象
   return config;
 }
