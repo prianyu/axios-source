@@ -83,7 +83,7 @@ const predicates = utils.toFlatObject(utils, {}, null, function filter(prop) {
 /**
  * It converts an object into a FormData object
  * 将对象转换为 FormData
- *
+ * 对于嵌套的对象和数组会被递归处理并根据配置转为点表示法或者方括号表示法的键值对
  * @param {Object<any, any>} obj - The object to convert to form data. 要转换的对象
  * @param {string} formData - The FormData object to append to. 要附加到 FormData 的对象
  * @param {Object<string, any>} options 选项
