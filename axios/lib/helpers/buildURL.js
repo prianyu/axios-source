@@ -23,7 +23,7 @@ function encode(val) {
 
 /**
  * Build a URL by appending params to the end
- *
+ * 根据url和params参数构建url
  * @param {string} url The base of the url (e.g., http://www.google.com)
  * @param {object} [params] The params to be appended
  * @param {?object} options
@@ -32,16 +32,17 @@ function encode(val) {
  */
 export default function buildURL(url, params, options) {
   /*eslint no-param-reassign:0*/
-  if (!params) {
+  if (!params) { // 没有参数则直接返回url
     return url;
   }
-  
-  const _encode = options && options.encode || encode;
 
-  const serializeFn = options && options.serialize;
+  const _encode = options && options.encode || encode; // 获取encode函数
+
+  const serializeFn = options && options.serialize; // 获取serialize函数
 
   let serializedParams;
 
+  // 序列化参数
   if (serializeFn) {
     serializedParams = serializeFn(params, options);
   } else {
@@ -51,11 +52,13 @@ export default function buildURL(url, params, options) {
   }
 
   if (serializedParams) {
-    const hashmarkIndex = url.indexOf("#");
+    const hashmarkIndex = url.indexOf("#");// 获取url中#的位置
 
+    // 如果url中包含#，则截取url中#前的部分
     if (hashmarkIndex !== -1) {
       url = url.slice(0, hashmarkIndex);
     }
+    // 拼接url
     url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
   }
 

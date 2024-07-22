@@ -7,15 +7,16 @@ import speedometer from './speedometer.js';
 
 const kInternals = Symbol('internals');
 
-class AxiosTransformStream extends stream.Transform{
+// 自定义的Transform流，用于处理数据的上传速率控制和报告
+class AxiosTransformStream extends stream.Transform {
   constructor(options) {
     options = utils.toFlatObject(options, {
-      maxRate: 0,
-      chunkSize: 64 * 1024,
-      minChunkSize: 100,
-      timeWindow: 500,
-      ticksRate: 2,
-      samplesCount: 15
+      maxRate: 0, // 最大传输速率（字节/秒）
+      chunkSize: 64 * 1024, // 每个数据块的大小
+      minChunkSize: 100, // 最小数据块的大小
+      timeWindow: 500, // 时间窗口（ms）
+      ticksRate: 2, // 更新进度的频率（每秒更新次数）
+      samplesCount: 15 // 用于速度测量的样本数量
     }, null, (prop, source) => {
       return !utils.isUndefined(source[prop]);
     });
@@ -26,6 +27,7 @@ class AxiosTransformStream extends stream.Transform{
 
     const self = this;
 
+    // 内部的初始状态的存储
     const internals = this[kInternals] = {
       length: options.length,
       timeWindow: options.timeWindow,
@@ -183,7 +185,7 @@ class AxiosTransformStream extends stream.Transform{
     });
   }
 
-  setLength(length) {
+  setLength(length) { // 设置总长度
     this[kInternals].length = +length;
     return this;
   }

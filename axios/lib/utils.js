@@ -713,6 +713,7 @@ const generateString = (size = 16, alphabet = ALPHABET.ALPHA_DIGIT) => {
  * If the thing is a FormData object, return true, otherwise return false.
  *  用于检查一个对象是否符合规范的 FormData 对象
  * 具有append方法、Symbol.toStringTag为FormData，且部署了Symbol.iterator
+ * 比如form-data库
  *
  * @param {unknown} thing - The thing to check.
  *

@@ -1,5 +1,6 @@
-const {asyncIterator} = Symbol;
+const { asyncIterator } = Symbol;
 
+// 选择一种合适的方式读取blob
 const readBlob = async function* (blob) {
   if (blob.stream) {
     yield* blob.stream()
