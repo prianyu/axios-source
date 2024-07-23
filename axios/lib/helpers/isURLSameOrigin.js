@@ -2,34 +2,41 @@
 
 import utils from './../utils.js';
 import platform from '../platform/index.js';
+/**
+ * 判断请求URL是否与当前URL是否同源
+ * 在web worker和react-native里固定返回true
+ */
 
 export default platform.hasStandardBrowserEnv ?
 
   // Standard browser envs have full support of the APIs needed to test
   // whether the request URL is of the same origin as current location.
   (function standardBrowserEnv() {
-    const msie = /(msie|trident)/i.test(navigator.userAgent);
-    const urlParsingNode = document.createElement('a');
+    const msie = /(msie|trident)/i.test(navigator.userAgent); // 是否是IE
+    const urlParsingNode = document.createElement('a'); // 创建用于解析url的锚点元素
     let originURL;
 
     /**
     * Parse a URL to discover its components
-    *
+    * 解析URL并返回其组成部分
+    * 此函数用于标准化URL组件，处理不同浏览器之间的差异
     * @param {String} url The URL to be parsed
     * @returns {Object}
     */
     function resolveURL(url) {
       let href = url;
 
-      if (msie) {
+      if (msie) { // 旧版IE需要设置两次才能正确解析
         // IE needs attribute set twice to normalize properties
         urlParsingNode.setAttribute('href', href);
         href = urlParsingNode.href;
       }
 
+      // 设置url属性
       urlParsingNode.setAttribute('href', href);
 
       // urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
+      // 返回url相关的信息
       return {
         href: urlParsingNode.href,
         protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
@@ -44,6 +51,7 @@ export default platform.hasStandardBrowserEnv ?
       };
     }
 
+    // 解析当前的URL
     originURL = resolveURL(window.location.href);
 
     /**
@@ -52,6 +60,9 @@ export default platform.hasStandardBrowserEnv ?
     * @param {String} requestURL The URL to test
     * @returns {boolean} True if URL shares the same origin, otherwise false
     */
+    // 返回一个新函数用于解析传入的URL
+    // 通过比较其protocol和host来判断是否同源
+    // 注：host=hostname+port
     return function isURLSameOrigin(requestURL) {
       const parsed = (utils.isString(requestURL)) ? resolveURL(requestURL) : requestURL;
       return (parsed.protocol === originURL.protocol &&

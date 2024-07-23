@@ -4,6 +4,10 @@ import AxiosError from '../core/AxiosError.js';
 import parseProtocol from './parseProtocol.js';
 import platform from '../platform/index.js';
 
+// 匹配data uri
+// ^(?:([^;]+);)? => 匹配mimetype，如image/png
+// (?:[^;]+;)? => 额外信息，如charset=utf-8
+// (base64|),([\s\S]*)$ => 匹配base64编码和数据
 const DATA_URL_PATTERN = /^(?:([^;]+);)?(?:[^;]+;)?(base64|),([\s\S]*)$/;
 
 /**
@@ -25,30 +29,35 @@ export default function fromDataURI(uri, asBlob, options) {
     asBlob = true;
   }
 
+  // data:协议
   if (protocol === 'data') {
-    uri = protocol.length ? uri.slice(protocol.length + 1) : uri;
+    uri = protocol.length ? uri.slice(protocol.length + 1) : uri; // 截取协议后的字符串
 
-    const match = DATA_URL_PATTERN.exec(uri);
+    const match = DATA_URL_PATTERN.exec(uri); // 匹配data uri
 
+    // 不是一个有效的data uri
     if (!match) {
       throw new AxiosError('Invalid URL', AxiosError.ERR_INVALID_URL);
     }
 
-    const mime = match[1];
-    const isBase64 = match[2];
-    const body = match[3];
-    const buffer = Buffer.from(decodeURIComponent(body), isBase64 ? 'base64' : 'utf8');
+    const mime = match[1]; // mimetype
+    const isBase64 = match[2]; // 是否是base64编码
+    const body = match[3]; // 数据
+    const buffer = Buffer.from(decodeURIComponent(body), isBase64 ? 'base64' : 'utf8'); // 将数据转为buffer
 
+    // 转为blob
     if (asBlob) {
-      if (!_Blob) {
+      if (!_Blob) { // 不支持blob
         throw new AxiosError('Blob is not supported', AxiosError.ERR_NOT_SUPPORT);
       }
 
       return new _Blob([buffer], { type: mime });
     }
 
+    // 不是blob，转为buffer
     return buffer;
   }
 
+  // 非data协议
   throw new AxiosError('Unsupported protocol ' + protocol, AxiosError.ERR_NOT_SUPPORT);
 }

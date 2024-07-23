@@ -201,7 +201,7 @@ export default isFetchSupported && (async (config) => {
     }
 
     // 是否在跨域请求下发送cookies
-    // omit: 从不发送  same-origin: 默认值，同源发送cookies  include: 发送cookies
+    // omit: 从不发送；same-origin: 默认值，同源发送cookies；include: 发送cookies
     // @suspense
     if (!utils.isString(withCredentials)) {
       withCredentials = withCredentials ? 'cors' : 'omit';
