@@ -5,8 +5,8 @@ import platform from '../platform/index.js';
 
 export default platform.hasStandardBrowserEnv ?
 
-// Standard browser envs have full support of the APIs needed to test
-// whether the request URL is of the same origin as current location.
+  // Standard browser envs have full support of the APIs needed to test
+  // whether the request URL is of the same origin as current location.
   (function standardBrowserEnv() {
     const msie = /(msie|trident)/i.test(navigator.userAgent);
     const urlParsingNode = document.createElement('a');
@@ -55,7 +55,7 @@ export default platform.hasStandardBrowserEnv ?
     return function isURLSameOrigin(requestURL) {
       const parsed = (utils.isString(requestURL)) ? resolveURL(requestURL) : requestURL;
       return (parsed.protocol === originURL.protocol &&
-          parsed.host === originURL.host);
+        parsed.host === originURL.host);
     };
   })() :
 

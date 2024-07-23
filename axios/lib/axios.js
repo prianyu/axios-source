@@ -95,8 +95,10 @@ axios.mergeConfig = mergeConfig;
 // 用于管理axios的headers的类
 axios.AxiosHeaders = AxiosHeaders;
 
+// 将formData转为json
 axios.formToJSON = thing => formDataToJSON(utils.isHTMLForm(thing) ? new FormData(thing) : thing);
 
+// 获取有效的请求适配器
 axios.getAdapter = adapters.getAdapter;
 
 // 状态码枚举

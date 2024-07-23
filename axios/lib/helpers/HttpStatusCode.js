@@ -1,3 +1,4 @@
+// http状态码
 const HttpStatusCode = {
   Continue: 100,
   SwitchingProtocols: 101,

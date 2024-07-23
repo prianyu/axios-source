@@ -531,7 +531,7 @@ const isTypedArray = (TypedArray => {
 
 /**
  * For each entry in the object, call the function with the key and value.
- *
+ * 遍历可迭代对象，将对象中每一项的key和value传入回调函数执行
  * @param {Object<any, any>} obj - The object to iterate over.
  * @param {Function} fn - The function to call for each entry.
  *
@@ -540,10 +540,12 @@ const isTypedArray = (TypedArray => {
 const forEachEntry = (obj, fn) => {
   const generator = obj && obj[Symbol.iterator];
 
+  // 获取对象迭代器
   const iterator = generator.call(obj);
 
   let result;
 
+  // 遍历迭代器
   while ((result = iterator.next()) && !result.done) {
     const pair = result.value;
     fn.call(obj, pair[0], pair[1]);
@@ -552,7 +554,7 @@ const forEachEntry = (obj, fn) => {
 
 /**
  * It takes a regular expression and a string, and returns an array of all the matches
- *
+ * String.prototype.matchAll的模拟实现，用于根据给定的正则表达式和字符串返回所有匹配结果
  * @param {string} regExp - The regular expression to match against.
  * @param {string} str - The string to search.
  *
