@@ -202,10 +202,17 @@ export default isFetchSupported && (async (config) => {
 
     // 是否在跨域请求下发送cookies
     // omit: 从不发送；same-origin: 默认值，同源发送cookies；include: 发送cookies
-    // @suspense
     if (!utils.isString(withCredentials)) {
       withCredentials = withCredentials ? 'cors' : 'omit';
     }
+
+    // 这里是axios fetch适配器的bug，应该修复为如下代码：
+    /**
+      if (!utils.isString(withCredentials)) {
+        withCredentials = withCredentials ? 'include' : 'omit';
+      }
+    */
+    // 我已经给axios提了issue：[Fix fetch request config#6505](https://github.com/axios/axios/pull/6505)
 
     // 创建fetch的Request对象
     request = new Request(url, {
@@ -215,7 +222,7 @@ export default isFetchSupported && (async (config) => {
       headers: headers.normalize().toJSON(), // 请求头
       body: data, // 请求体
       duplex: "half", // 双工通信
-      withCredentials
+      withCredentials // 此处是fetch adapter的bug，应该修复为credentials: withCredentials
     });
 
     // 发送请求
