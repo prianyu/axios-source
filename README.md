@@ -4,25 +4,25 @@
 
 Axios导出的内容列表如下：
 
-  + `axios`：默认导出，是一个Axios实例
+  + `axios`：默认导出，是一个**Axios实例**
   + `Axios`：Axios类
   + `AxiosError`：Axios错误类，用于创建Axios相关的错误对象
   + `CanceledError`：请求取消错误类
   + `isCancel`：用于判断某个对象是否是一个`CanceledError`实例
-  + `CancelToken`：用于创建取消令牌的类,
+  + `CancelToken`：用于创建取消令牌的类
   + `VERSION`：版本号
-  + `all`：用于多个axios并发请求
+  + `all`：用于发起多个axios并发请求
   + `Cancel`：`CanceledError`的别名，用于兼容
   + `isAxiosError`：用于判断某个对象是否是一个`AxiosError`（具有`isAxiosError:true`）
   + `spread`：`Function.prototype.apply`的语法糖
   + `toFormData`：将一个对象转化为`FormData`
   + `AxiosHeaders`：用于管理请求头的类
   + `HttpStatusCode`：HTTP状态码列表
-  + `formToJSON`：将`FormData`转为Json格式
+  + `formToJSON`：将`FormData`转为`Json`格式
   + `getAdapter`：获取有效的适配器的函数
-  + `mergeConfig`：用于合并两个axios配置的方法
+  + `mergeConfig`：用于合并两个**axios配置**的方法
 
-默认导出的`axios`是由内部的`createInstance`函数调用创建的实例，实例上有一个`create`方法指向`createInstance`函数。其余的导出都是实例上的方法。之所以导出一个`axios`的实例而不是直接导出`Axios`类作为默认导出，是为了使用的方便。一个原始的使用例子如下：
+默认导出的`axios`是由内部的`createInstance`函数调用创建的实例，实例上有一个`create`方法指向`createInstance`函数，可以用于创建自定义的axios实例。其余的导出都是实例上的方法。之所以导出一个`axios`的实例而不是直接导出`Axios`类作为默认导出，是为了使用的方便。一个原始的使用例子如下：
 
 ```js
 const axios = new Axios()
@@ -101,20 +101,20 @@ axios.post('/user', {
 ```
 当我们按照类似如上方法调用`axios`发起一个请求时，axios内部做了以下的事情：
 
-+ 参数统一，request既可以接收一个url+config，也可以只接收一个包含url属性的config
++ 参数统一，`Axios.prototype.request`既可以接收一个**url+config**，也可以只接收一个**包含url属性的config**
 + 合并选项：合并默认的选项以及传入的选项
-+ 获取方法等属性
++ 获取请求方法等属性
 + 解析请求头，生成最终用于创建发起请求的头部信息
 + 初始化一个请求拦截器的链（数组）
-+ 设置请求拦截器，将所有请求拦截器逐个压入拦截器链的头部
++ 设置请求拦截器，将所有请求拦截器逐个压入拦截器链的头部（倒序）
 + 初始化一个响应拦截器的链（数组）
 + 设置响应拦截器，将所有的响应拦截器逐个压入拦截器链的尾部
 + 如果存在异步的请求拦截器
-  + 初始化一个请求链，并将dispatchRequest（用于发起请求的方法）压入链
-  + 将请求拦截器放到该链的前面，将响应拦截器放到该链的后面，这样就形成了一条：请求拦截器->请求->响应拦截器的链
-  + 使用`Promise.resolve(config)`创建一个初始的promise
-  + 遍历整个链，逐个调用Promise的`then`方法，这样就形成了一条完整的promise链式调用
-  + 返回最终的Promise
+  + 初始化一个请求链，并将`dispatchRequest`（用于发起请求的方法）压入链
+  + 将请求拦截器放到该链的前面，将响应拦截器放到该链的后面，这样就形成了一条：**请求拦截器->请求->响应拦截器**的链
+  + 使用`Promise.resolve(config)`创建一个初始的`promise`
+  + 遍历整个链，逐个调用`promise`的`then`方法，这样就形成了一条完整的promise链式调用
+  + 返回最终的`promise`
 + 如果不存在异步的请求拦截器
   + 创建一个新的配置对象`newConfig`
   + 遍历请求拦截器，将其结果不断赋值给`newConfig`
@@ -125,10 +125,10 @@ axios.post('/user', {
 
 ## `dispatchRequest(config)`函数
 
-`dispatchRequest`函数是整个请求处理链条的核心，也是实际发起请求的地方。`dispatchRequest`函数接收一个`config`配置对象，返回一个Promise，其调用后执行的过程如下：
+`dispatchRequest`函数是整个请求处理链条的核心，也是实际发起请求的地方。`dispatchRequest`函数接收一个`config`配置对象，返回一个`promise`，其调用后执行的过程如下：
 
 + 检查请求是否已经取消（使用`CancelToken`或者`new AbortController().signal`），如果已经取消了，则会抛出中断的错误
-+ 实例化请求头为AxiosHeader实例
++ 实例化请求头为**AxiosHeader实例**
 + 遍历请求转换器，传入相关配置调用请求转换器，生成转换后的请求数据
 + 规范化请求头
 + 根据配置获取请求适配器，目前支持`['xhr', 'http', 'fetch']`，也可以自定义适配器
@@ -142,15 +142,17 @@ axios.post('/user', {
   + 如果`reason`不是`CancelError`
     + 判断请求是否已经取消了，如果取消了，则会抛出中断错误
     + 如果有错误中包含`reason.response`属性（有响应，但是状态码超过了定义的成功范围），则调用响应转换器，转换并生成最终响应的数据，并将响应头转为`AxiosHeaders`实例
-  + 返回一个拒绝的Promise
+  + 返回一个拒绝的`Promise`
 
 ## 总结
 
 Axios的核心其实是非常简单的，它接收配置后生成一个用于请求和处理请求数据、响应数据的链条，在发起请求成功或者失败后，将结果返回。Axios源码中比较复杂的部分是每一个适配器内部的参数处理，包括参数的序列化、规范化、流的处理等逻辑。尤其是`FormData`和`Stream`的处理。这部分的内容比较繁杂，详情查看源码注释。
 
-另外，Axios新增的`fetch`适配器是有bug的，目前发现了一个处理跨域携带凭证信息时，处理`withCredentials`配置的bug。在fetch适配器中有如下代码：
+另外，**Axios**新增的`fetch`适配器是有bug的，目前发现了一个处理跨域携带凭证信息时，处理`withCredentials`配置的bug。在fetch适配器中有如下代码：
 
 ```js
+// lib/adapters/fetch.js
+
 if (!utils.isString(withCredentials)) {
   withCredentials = withCredentials ? 'cors' : 'omit';
 }
