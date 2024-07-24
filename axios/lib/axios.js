@@ -26,28 +26,6 @@ import HttpStatusCode from './helpers/HttpStatusCode.js';
  * @returns {Axios} A new instance of Axios
  * 用于创建axios请求的实例
  */
-function createInstance(defaultConfig) {
-
-  const context = new Axios(defaultConfig); // 实例化
-  // 创建request的绑定函数
-  const instance = bind(Axios.prototype.request, context);
-
-  // Copy axios.prototype to instance
-  //  将Axios.prototype上的属性拷贝到instance上
-  utils.extend(instance, Axios.prototype, context, { allOwnKeys: true });
-
-  // Copy context to instance
-  // 将Axios实例上的属性拷贝到instance上
-  utils.extend(instance, context, null, { allOwnKeys: true });
-
-  // Factory for creating new instances
-  // 添加create方法，用于创建新的axios实例
-  instance.create = function create(instanceConfig) {
-    return createInstance(mergeConfig(defaultConfig, instanceConfig));
-  };
-
-  return instance;
-}
 
 // Create the default instance to be exported
 // 创建axios的默认实例用于导出
